@@ -10,46 +10,44 @@ from fifo import Fifo
 data = Filefifo(10, name = "capture_250Hz_01.txt")
 
 
-#def main(time = 2, scaler = 1, shifter = 0, display_graph = False):
-    
+
+frequency = 250
 prev_value = 0
+slope = 0
+prev_slope = 0
 samples = 0
 rising = False
 start_count = False
 sample_list = []
-sample_time = 0
+sample_time = 2
 min_list = []
 max_list = []
 
 
 while True:
     value = data.get()
-    if sample_time >= 2:
-        break
-    if rising == True and prev_value > value:
+    samples += 1
+    current_slope = value - prev_value
+    if current_slope <= 0 and prev_slope > 0:
         sample_list.append(samples)
-        if sample_list[0] == 0:
-            sample_list.pop()
-        if min_list[0] == 0:
-                min_list.pop()
-
-        elif len(sample_list) > 1:
-            sample_time += (1/250) * sample_list[-1]
-            sample_time = round(sample_time)
         samples = 0
         max_list.append(prev_value)
-        start_count = True
-        rising = False
 
-    if value > prev_value:
-        if rising == False:
+    if current_slope >= 0 and prev_slope < 0:
             min_list.append(prev_value)
-        rising = True
+
+
+    if [samples + sum(sample_list)] >= [sample_time * frequency]:
+        break
+
+    if current_slope >= 0 and prev_slope < 0:
+            min_list.append(prev_value)
+
         
-    if start_count == True:
-        samples += 1
+
     
     prev_value = value
+    prev_slope = current_slope
 
 
 
@@ -68,7 +66,7 @@ scaler = (tup[1] - tup[0])/(100 - 0)
 shifter1 = tup[0]/scaler - 0
 shifter2 = tup[1]/scaler - 100
 
-#main(time = 10, scaler = scaler, shifter = shifter1, display_graph = True)
+
 while True:
     value = data.get()
     if sample_time >= 10:

@@ -11,28 +11,32 @@ oled_height = 64
 oled = SSD1306_I2C(oled_width, oled_height, i2c)
 
 x = 0
-y = 31
+middle = 31
+y = middle
 
 oled.fill(0)
 while True:
-    while x < 127:
-        if y > 0 and y < oled_height:
+    
+    while x <= 127:
+        if y >= 0 and y < oled_height:
             print(x,y)
-            oled.pixel(x, y, 1)
-            oled.show()
+            
+            
             if up() == 0:
                 y -= 1
             if down() == 0:
                 y += 1
             if stop() == 0:
                 oled.fill(0)
-                time.sleep(1)
-                break
-        elif y <= 0:
-            y = 1
-            continue
-        elif y >= 63:
+                time.sleep(0.1)
+                x = 0
+                y = middle
+        if y <= 0:
+            y = 0
+        if y >= 63:
             y = 63
-            continue
+        
+        oled.pixel(x, y, 1)
+        oled.show()
         x += 1
     x = 0

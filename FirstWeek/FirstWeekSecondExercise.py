@@ -15,10 +15,10 @@ oled = SSD1306_I2C(oled_width, oled_height, i2c)
 x = 0
 y = 0
 while True:
-    if y == 64:
+    if y == oled_height:
         oled.scroll(0, -text_height)
-        y = 56
-        oled.rect(x, y, oled_width, character_height, 0,[True])
+        y = oled_height - 8
+        oled.rect(x, y, oled_width, text_height, 0,[True])
     text = input('enter text')
     oled.text(text,x,y,1)
     y = y + 8

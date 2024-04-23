@@ -14,22 +14,26 @@ sample_list = []
 frq = 250
 current_slope = 0
 prev_slope = 0
+prev_delta = 0
+delta_list = []
 
-while len(sample_list) < 4:
+while len(sample_list) < 5:
     value = data.get()
     current_slope = value - prev_value
     samples += 1
     
     if current_slope <= 0 and prev_slope > 0:
         sample_list.append(samples)
-        samples = 0
         current_peak = prev_value
+        prev_delta = samples
     prev_value = value
     prev_slope = current_slope
+for i in range(4):
+    delta_list.append(sample_list[i+1] - sample_list[i])
     
-print(sample_list)
+print(delta_list)
 
-average_samples = sum(sample_list)//len(sample_list)
+average_samples = sum(delta_list)//len(delta_list)
         
 sample_time = (1/frq) * average_samples   
 print(sample_time)
@@ -38,4 +42,5 @@ frq_samples = 1/sample_time
 print(frq_samples)
 
 
-#change current program and base it off of previous and current slope
+
+

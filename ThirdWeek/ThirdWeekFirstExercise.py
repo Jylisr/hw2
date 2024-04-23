@@ -27,8 +27,10 @@ if light.value():
     light.off()
     
 while True:
+    if rot.fifo.has_data():
+        ban = rot.fifo.get()
     if not rot_butt.value():
-        time.sleep(0.5)
+        time.sleep(0.25)
         if light.value():
             light.off()
         elif not light.value():
@@ -48,5 +50,5 @@ while True:
                     break
                 else:
                     pass
-        time.sleep(0.5)
+        time.sleep(0.25)
 

@@ -23,16 +23,18 @@ led1 = Led(22, Pin.OUT)
 led2 = Led(21, Pin.OUT)
 led3 = Led(20, Pin.OUT)
 brightness = 50
+pts = 0
 
 
 press = Fifo(20, typecode = 'i')
-ticks = []
 rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
 
 def button_handler(pin):
-    press.put(+1)
-    timer = time.ticks_ms
-    ticks.append(timer)
+    global ts
+    global pts
+    ts = time.ticks_ms()
+    press.put(1)
+    
 rot_butt.irq(handler = button_handler, trigger = Pin.IRQ_FALLING, hard = True)
 
 
@@ -52,6 +54,7 @@ oled.text("LED3 - OFF", 0, (text_height * text_pos_magn[2]) + 1, 1)
 oled.show()
 highlighted_text = 0
 highlight = False
+tick_list = []
 
 
 
@@ -82,14 +85,18 @@ while True:
         
     while press.has_data():
         val = press.get()
-        if time.ticks_add(ticks[-1],ticks[-2] > 50):
-            pass
-        elif highlighted_text == 1:
+        if pts != 0:
+            if ts - pts <= 250:
+                continue
+        
+
+        if highlighted_text == 1:
             led1.toggle()
         elif highlighted_text == 2:
             led2.toggle()
         elif highlighted_text == 3:
             led3.toggle()
+            pts = ts
         
         if led1.value():
             oled.rect(0, 0 + 1, oled_width, text_height, 0, [True])

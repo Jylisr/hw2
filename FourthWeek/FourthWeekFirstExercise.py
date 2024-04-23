@@ -3,13 +3,9 @@ from ssd1306 import SSD1306_I2C
 from machine import UART, Pin, I2C
 from filefifo import Filefifo
 from fifo import Fifo
+from led import Led
 
-#scaler = 99.99
-#shifter = 70.007
-
-data = Filefifo(10, name = "capture_250Hz_01.txt")
-
-
+data = Filefifo(20, name = "capture02_250Hz.txt")
 
 frequency = 250
 prev_value = 0
@@ -22,7 +18,16 @@ min_list = []
 max_list = []
 
 
-while not [samples + sum(sample_list)] >= [sample_time * frequency]:
+prev_value = 0
+samples = 0
+rising = False
+start_count = False
+sample_list = []
+frq = 250
+current_slope = 0
+prev_slope = 0
+
+while True:
     value = data.get()
     samples += 1
     current_slope = value - prev_value
@@ -34,6 +39,10 @@ while not [samples + sum(sample_list)] >= [sample_time * frequency]:
     if current_slope >= 0 and prev_slope < 0:
             min_list.append(prev_value)
 
+
+    if [samples + sum(sample_list)] >= [sample_time * frequency]:
+        break
+
     if current_slope >= 0 and prev_slope < 0:
             min_list.append(prev_value)
 
@@ -44,24 +53,13 @@ while not [samples + sum(sample_list)] >= [sample_time * frequency]:
     prev_slope = current_slope
 
 
+    
+print(sample_list)
 
-
-min = min(min_list)
-max = max(max_list)
-
-
-
-
-
-tup = (min, max)
-
-scaler = (tup[1] - tup[0])/(100 - 0)
-shifter1 = tup[0]/scaler - 0
-shifter2 = tup[1]/scaler - 100
-
-
-while not sample_time >= 10:
-    value = data.get()
-    print((value/scaler) - shifter1)
-    if (value/scaler - shifter1) == 100:
-        sample_time += 1
+average_samples = sum(sample_list)//len(sample_list)
+        
+sample_time = (1/frq) * average_samples   
+print(sample_time)
+        
+frq_samples = 1/sample_time        
+print(frq_samples)

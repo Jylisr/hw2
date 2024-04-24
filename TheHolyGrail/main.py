@@ -21,11 +21,46 @@ class Encoder:
             self.fifo.put(-1)
         else:
             self.fifo.put(+1)
+
+def start_menu():
+    text_pos_magn = [0, 2, 4, 6]
+    highlighted_text = 0
+    oled.fill(0)
+    oled.text("MEASURE HEART RATE", 0, 0 + 1, 1)
+    oled.text("BASIC HRV ANALYSIS", 0, (text_height * text_pos_magn[1]) + 1, 1)
+    oled.text("HISTORY", 0, (text_height * text_pos_magn[2]) + 1, 1)
+    oled.text("KUBIOS", 0, (text_height * text_pos_magn[3]) + 1, 1)
+    oled.show()
+
+    while True:
+        if highlighted_text != 0:
+            pos = text_pos_magn[highlighted_text - 1]
+            oled.rect(0, text_height * pos, oled_width, text_height + 2, 1)
+        
+        oled.show()
+        
+        while rot.fifo.has_data():
+            value = rot.fifo.get()
+            if value == 1:
+                if highlighted_text + 1 < 5:
+                    pos = text_pos_magn[highlighted_text - 1]
+                    oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
+                    highlighted_text += 1
+
+            elif value == -1:
+                if highlighted_text > 1:
+                    pos = text_pos_magn[highlighted_text - 1]
+                    oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
+                    highlighted_text -= 1
+
+"""        if time.ticks_diff(time.ticks_ms(), pts) >= 250:
+            break  """
             
             
 samples = Fifo(2000)
 minhr = 30
 maxhr = 240
+pts = 0
 ppis = []
 ppi_list_processed = []
 gap_ms = 4
@@ -58,8 +93,13 @@ oled.rect(44,56,character_width * 5,text_height, 1, 1)
 oled.text("Start", 44, 56, 0)
 oled.show()
 
+
+
+
 while rot_butt.value():
     pass
+
+start_menu()
 
 def get_signal():
     data = sensor.read_u16()
@@ -68,3 +108,4 @@ def get_signal():
 timer = Piotimer(period = gap_ms, mode = Piotimer.PERIODIC, callback = get_signal)
 
  
+

@@ -24,7 +24,10 @@ class Encoder:
             
  
 samples = Fifo(2000)
+press = Fifo(20)
 sample_list = []
+peakcounts = []
+max_sample = 0
 minhr = 30
 maxhr = 240
 pts = 0
@@ -42,8 +45,18 @@ sensor = ADC(Pin(26))
 rot = Encoder(10,11)
 rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
 
+def button_handler(pin):
+    global ts
+    ts = time.ticks_ms()
+    press.put(1)
+    
+rot_butt.irq(handler = button_handler, trigger = Pin.IRQ_FALLING, hard = True)
+
+
 
 def start_menu():
+    global pts
+    global highlighted_text
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     oled.fill(0)
@@ -59,6 +72,16 @@ def start_menu():
             oled.rect(0, text_height * pos, oled_width, text_height + 2, 1)
         
         oled.show()
+        if press.has_data():
+            value = press.get()
+            if ts - pts < 200:
+                print(ts - pts)
+                pts = ts
+                continue
+            else:
+                print(ts - pts)
+                pts = ts
+                break
         
         while rot.fifo.has_data():
             value = rot.fifo.get()
@@ -74,6 +97,7 @@ def start_menu():
                     oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
                     highlighted_text -= 1
 
+            
 """        if time.ticks_diff(time.ticks_ms(), pts) >= 250:
             break  """
             
@@ -104,25 +128,52 @@ oled.rect(44,56,character_width * 5,text_height, 1, 1)
 oled.text("Start", 44, 56, 0)
 oled.show()
 
-
-
-
-while rot_butt.value():
+while not press.has_data():
     pass
 
+data = press.get()
+pts = ts
 start_menu()
 
 
 
-while True:
-    if samples.has_data():
-        sample = samples.get()
-        sample_list.append(sample)
-        count += 1
-        if sample < 0:
-            break
-        if count >= 750:
-            max = max(sample_list)
-            min = min(sample_list)
-            threshhold = (3*max + 2*min)/5
+if highlighted_text == 1:
+    while True:
+        if samples.has_data():
+            print("But this is where the problem arises")
+            sample = samples.get()
+            sample_list.append(sample)
+            count += 1
+            if sample < 0:
+                break
+            if count >= 750:
+                max = max(sample_list)
+                min = min(sample_list)
+                threshhold = (4*max + min)/5
+                prev = samples[0]
+                counter = 0
+                
+                #gathering peak counts
+                for i in sample_list:
+                    if i >= threshhold and i > max_sample:
+                        max_sample = i
+                    if i < threshold and max_sample != 0:
+                        peakcounts.append(sample_list.index(max_sample))
+                        max_sample = 0
+                        
+                        
+                for i in range(len(peak)):
+                    delta = peakcounts[i] - peakcounts [i - 1]
+                    ppi = delta * gap_ms
+                    
+                    if ppi > 0:
+                        heartrate = 60000/ppi
+                        heartrate = round(heartrate)
+                        if hearate > minhr and heartrate < maxhr:
+                            oled.fill(0)
+                            oled.text(f"HR : {heartrate} BPM", 52, 30, 1)
+                            oled.show()
+                            print(f"HR : {heartrate} BPM")
+                            ppis.append(ppi)
+                        
 

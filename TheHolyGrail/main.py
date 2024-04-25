@@ -26,7 +26,7 @@ def start_menu():
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     oled.fill(0)
-    oled.text("MEASURE HEART RATE", 0, 0 + 1, 1)
+    oled.text("MEASURE HR", 0, 0 + 1, 1)
     oled.text("BASIC HRV ANALYSIS", 0, (text_height * text_pos_magn[1]) + 1, 1)
     oled.text("HISTORY", 0, (text_height * text_pos_magn[2]) + 1, 1)
     oled.text("KUBIOS", 0, (text_height * text_pos_magn[3]) + 1, 1)

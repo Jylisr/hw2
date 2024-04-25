@@ -21,6 +21,27 @@ class Encoder:
             self.fifo.put(-1)
         else:
             self.fifo.put(+1)
+            
+ 
+samples = Fifo(2000)
+sample_list = []
+minhr = 30
+maxhr = 240
+pts = 0
+ppis = []
+ppi_list_processed = []
+gap_ms = 4
+count = 0
+i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
+oled_width = 128
+oled_height = 64
+character_width = 8
+text_height = 8
+oled = SSD1306_I2C(oled_width, oled_height, i2c)
+sensor = ADC(Pin(26))
+rot = Encoder(10,11)
+rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
+
 
 def start_menu():
     text_pos_magn = [0, 2, 4, 6]
@@ -56,24 +77,14 @@ def start_menu():
 """        if time.ticks_diff(time.ticks_ms(), pts) >= 250:
             break  """
             
-            
-samples = Fifo(2000)
-minhr = 30
-maxhr = 240
-pts = 0
-ppis = []
-ppi_list_processed = []
-gap_ms = 4
-counter = 0
-i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
-oled_width = 128
-oled_height = 64
-character_width = 8
-text_height = 8
-oled = SSD1306_I2C(oled_width, oled_height, i2c)
-sensor = ADC(Pin(26))
-rot = Encoder(10,11)
-rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
+
+
+def get_signal():
+    data = sensor.read_u16()
+    samples.put(data)
+
+timer = Piotimer(period = gap_ms, mode = Piotimer.PERIODIC, callback = get_signal)
+
             
             
 
@@ -101,11 +112,17 @@ while rot_butt.value():
 
 start_menu()
 
-def get_signal():
-    data = sensor.read_u16()
-    samples.put(data)
 
-timer = Piotimer(period = gap_ms, mode = Piotimer.PERIODIC, callback = get_signal)
 
- 
+while True:
+    if samples.has_data():
+        sample = samples.get()
+        sample_list.append(sample)
+        count += 1
+        if sample < 0:
+            break
+        if count >= 750:
+            max = max(sample_list)
+            min = min(sample_list)
+            threshhold = (3*max + 2*min)/5
 

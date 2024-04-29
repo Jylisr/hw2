@@ -152,7 +152,7 @@ if highlighted_text == 1:
                 print(max_value)
                 #prev = sample_list[0]
                 print(threshhold)
-                counter = 0
+                count = 0
                 
                 #gathering peak counts
                 for i in sample_list:
@@ -172,7 +172,7 @@ if highlighted_text == 1:
                         heartrate = round(heartrate)
                         if heartrate > minhr and heartrate < maxhr:
                             oled.fill(0)
-                            oled.text(f"HR : {heartrate} BPM", 52, 30, 1)
+                            oled.text(f"HR : {heartrate} BPM", 0, 30, 1)
                             oled.show()
                             print(f"HR : {heartrate} BPM")
                             ppis.append(ppi)

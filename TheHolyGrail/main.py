@@ -34,7 +34,6 @@ minhr = 30
 maxhr = 240
 pts = 0
 ppis = []
-ppi_list_processed = []
 gap_ms = 4
 count = 0
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
@@ -103,12 +102,54 @@ def start_menu():
 """        if time.ticks_diff(time.ticks_ms(), pts) >= 250:
             break  """
             
+def measure_hr():
+    global ppis
+    while True:
+        if samples.has_data():
+            sample = samples.get()
+            sample_list.append(sample)
+            count += 1
+            if sample < 0:
+                break
+            if count >= 750:
+                max_value = max(sample_list)
+                min_value = min(sample_list)
+                threshhold = (4*max_value + min_value)/5
+                #print(max_value)
+                #print(threshhold)
+                count = 0
+                
+                #gathering peak counts
+                for i in sample_list:
+                    if i >= threshhold and i > max_sample:
+                        max_sample = i
+                    if i < threshhold and max_sample != 0:
+                        peakcounts.append(sample_list.index(max_sample))
+                        max_sample = 0
+                        
+                        
+                for i in range(len(peakcounts)):
+                    delta = peakcounts[i] - peakcounts [i - 1]
+                    ppi = delta * gap_ms
+                    
+                    if ppi > 0:
+                        heartrate = 60000/ppi
+                        heartrate = round(heartrate)
+                        if heartrate > minhr and heartrate < maxhr:
+                            oled.fill(0)
+                            oled.rect(oled_width - (character_width * 4), oled_height - (text_height + 1), character_width * 4, text_height, 1, 1)
+                            oled.text("STOP", oled_width - (character_width * 4), oled_height - text_height, 0)
+                            oled.text(f"HR : {heartrate} BPM", 0, 30, 1)
+                            oled.show()
+                            print(f"HR : {heartrate} BPM")
+                            ppis.append(ppi)
+
+                
+                sample_list = []
+                peakcounts = []
 
 
-def get_signal(tid):
-    samples.put(sensor.read_u16())
 
-timer = Piotimer(period = 4, mode = Piotimer.PERIODIC, callback = get_signal)
 
             
             
@@ -136,45 +177,29 @@ data = press.get()
 pts = ts
 start_menu()
 
+def get_signal(tid):
+    samples.put(sensor.read_u16())
+
+timer = Piotimer(period = 4, mode = Piotimer.PERIODIC, callback = get_signal)
 
 if highlighted_text == 1:
-    while True:
-        if samples.has_data():
-            sample = samples.get()
-            sample_list.append(sample)
-            count += 1
-            if sample < 0:
-                break
-            if count >= 750:
-                max_value = max(sample_list)
-                min_value = min(sample_list)
-                threshhold = (4*max_value + min_value)/5
-                print(max_value)
-                #prev = sample_list[0]
-                print(threshhold)
-                count = 0
-                
-                #gathering peak counts
-                for i in sample_list:
-                    if i >= threshhold and i > max_sample:
-                        max_sample = i
-                    if i < threshhold and max_sample != 0:
-                        peakcounts.append(sample_list.index(max_sample))
-                        max_sample = 0
-                        
-                        
-                for i in range(len(peakcounts)):
-                    delta = peakcounts[i] - peakcounts [i - 1]
-                    ppi = delta * gap_ms
-                    
-                    if ppi > 0:
-                        heartrate = 60000/ppi
-                        heartrate = round(heartrate)
-                        if heartrate > minhr and heartrate < maxhr:
-                            oled.fill(0)
-                            oled.text(f"HR : {heartrate} BPM", 0, 30, 1)
-                            oled.show()
-                            print(f"HR : {heartrate} BPM")
-                            ppis.append(ppi)
-                        
+    measure_hr()
 
+
+start_menu()
+                
+#if highlighted_text == 2:
+    #hrv_analysis()
+
+    mean_ppi = sum(ppis)/len(ppis)
+    
+    mean_HR = 60000/mean_ppi
+    
+    for ppi in ppis:
+        ibi_diff += (ppi - mean_ppi)**2
+    ssdn = math.sqrt(ibi_diff/len(ppis - 1))
+    
+    for i in range(len(ppis) - 1):
+        ibi_diff += (ppis[i] - ppis[i + 1])**2
+    rmssd = math.sqrt(ibi_diff/len(ppis - 1))
+    

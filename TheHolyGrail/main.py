@@ -104,6 +104,15 @@ def start_menu():
 """        if time.ticks_diff(time.ticks_ms(), pts) >= 250:
             break  """
             
+            
+def collecting_data():
+    while not info:
+        oled.fill(0)
+        oled.text("Collecting", 24, 25, 1)
+        oled.text("Data...", 47, 35, 1)
+        oled.show()
+
+            
 def measure_hr():
     global ppis
     global sample_list

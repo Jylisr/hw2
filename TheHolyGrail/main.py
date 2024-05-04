@@ -232,4 +232,16 @@ start_menu()
     "sdnn": sdnn
     }
     json_message = measurement.json()
-"""    
+"""
+
+"""if highlighted_text == 3:
+    text_pos_magn = [0, 2, 4, 6]
+    highlighted_text = 0
+    oled.fill(0)
+    oled.text("MEASUREMENT 1", 0, 0 + 1, 1)
+    oled.text("MEASUREMENT 2", 0, (text_height * text_pos_magn[1]) + 1, 1)
+    oled.text("MEASUREMENT 3", 0, (text_height * text_pos_magn[2]) + 1, 1)
+    oled.text("MEASUREMENT 4", 0, (text_height * text_pos_magn[3]) + 1, 1)
+    oled.show()
+    pass
+"""

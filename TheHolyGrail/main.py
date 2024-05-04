@@ -111,6 +111,13 @@ def collecting_data():
         oled.text("Collecting", 24, 25, 1)
         oled.text("Data...", 47, 35, 1)
         oled.show()
+        
+def sending_data():
+    while not info:
+        oled.fill(0)
+        oled.text("Sending", 24, 25, 1)
+        oled.text("Data...", 47, 35, 1)
+        oled.show()
 
             
 def measure_hr():

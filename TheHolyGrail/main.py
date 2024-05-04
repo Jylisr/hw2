@@ -78,11 +78,11 @@ def start_menu():
         if press.has_data():
             value = press.get()
             if ts - pts < 250:
-                print(ts - pts)
+                #print(ts - pts)
                 pts = ts
                 continue
             else:
-                print(ts - pts)
+                #print(ts - pts)
                 pts = ts
                 break
         
@@ -121,11 +121,7 @@ def sending_data():
 
             
 def measure_hr():
-    global ppis
-    global sample_list
-    global count
-    global max_sample
-    global peakcounts
+    global ppis, sample_list, count, max_sample, peakcounts, pts, ts
     while True:
         if samples.has_data():
             sample = samples.get()
@@ -137,8 +133,7 @@ def measure_hr():
                 max_value = max(sample_list)
                 min_value = min(sample_list)
                 threshhold = (4*max_value + min_value)/5
-                print(max_value)
-                print(threshhold)
+                #print(max_value, threshhold)
                 count = 0
                 
                 #gathering peak counts
@@ -149,12 +144,26 @@ def measure_hr():
                         peakcounts.append(sample_list.index(max_sample))
                         max_sample = 0
                         
-                        
-                for i in range(len(peakcounts)):
+                print(len(peakcounts))
+                for i in range(1, len(peakcounts)):
                     delta = peakcounts[i] - peakcounts [i - 1]
+                    if delta < 0:
+                        continue
                     ppi = delta * gap_ms
+                    print(ppi)
+                    if press.has_data():
+                        value = press.get()
+                        if ts - pts < 250:
+                            #print(ts - pts)
+                            pts = ts
+                            continue
+                        else:
+                           # print(ts - pts)
+                            pts = ts
+                            break
+
                     
-                    if ppi > 0:
+                    if ppi > 300 and ppi < 1200:
                         heartrate = 60000/ppi
                         heartrate = round(heartrate)
                         if heartrate > minhr and heartrate < maxhr:
@@ -163,7 +172,7 @@ def measure_hr():
                             oled.text("STOP", oled_width - (character_width * 4), oled_height - text_height, 0)
                             oled.text(f"HR : {heartrate} BPM", 0, 30, 1)
                             oled.show()
-                            print(f"HR : {heartrate} BPM")
+                            #print(f"HR : {heartrate} BPM")
                             ppis.append(ppi)
 
                 

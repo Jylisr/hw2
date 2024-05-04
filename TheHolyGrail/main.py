@@ -6,6 +6,7 @@ from fifo import Fifo
 from led import Led
 from piotimer import Piotimer
 import micropython
+import ujson
 #import extraction
 
 
@@ -42,7 +43,7 @@ oled_height = 64
 character_width = 8
 text_height = 8
 oled = SSD1306_I2C(oled_width, oled_height, i2c)
-sensor = ADC(Pin(26))
+sensor = ADC(Pin(26)) #ADC_0
 rot = Encoder(10,11)
 rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
 
@@ -58,6 +59,7 @@ rot_butt.irq(handler = button_handler, trigger = Pin.IRQ_FALLING, hard = True)
 def start_menu():
     global pts
     global highlighted_text
+    global max_sample
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     oled.fill(0)
@@ -104,6 +106,10 @@ def start_menu():
             
 def measure_hr():
     global ppis
+    global sample_list
+    global count
+    global max_sample
+    global peakcounts
     while True:
         if samples.has_data():
             sample = samples.get()
@@ -115,8 +121,8 @@ def measure_hr():
                 max_value = max(sample_list)
                 min_value = min(sample_list)
                 threshhold = (4*max_value + min_value)/5
-                #print(max_value)
-                #print(threshhold)
+                print(max_value)
+                print(threshhold)
                 count = 0
                 
                 #gathering peak counts
@@ -188,7 +194,7 @@ if highlighted_text == 1:
 
 start_menu()
                 
-#if highlighted_text == 2:
+"""if highlighted_text == 2:
     #hrv_analysis()
 
     mean_ppi = sum(ppis)/len(ppis)
@@ -203,3 +209,11 @@ start_menu()
         ibi_diff += (ppis[i] - ppis[i + 1])**2
     rmssd = math.sqrt(ibi_diff/len(ppis - 1))
     
+    measurement = {
+    "mean_hr": mean_HR,
+    "mean_ppi": mean_ppi,
+    "rmssd": rmssd,
+    "sdnn": sdnn
+    }
+    json_message = measurement.json()
+"""    

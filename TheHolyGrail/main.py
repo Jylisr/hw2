@@ -134,17 +134,6 @@ def error_data():
         time.sleep(3)
         start_menu()
         break
-    
-def data_works():
-    while not info:
-        oled.fill(0)
-        oled.text("Mean HR:", 2, 2, 1)
-        oled.text("Mean PPI:", 2, 12, 1)
-        oled.text("RMSSD:", 2, 22, 1)
-        oled.text("SDNN:", 2, 32, 1)
-        oled.text("SNS:", 2, 42, 1)
-        oled.text("PNS:", 2, 52, 1)
-        oled.show()
         
 
             
@@ -153,11 +142,9 @@ def measure_hr():
         samples.put(sensor.read_u16())
 
     timer = Piotimer(period = 4, mode = Piotimer.PERIODIC, callback = get_signal)
+    
     global ppis, sample_list, count, max_sample, peakcounts, pts, ts
-    go_back = False
     while True:
-        if go_back == True:
-            break
         if samples.has_data():
             sample = samples.get()
             sample_list.append(sample)
@@ -201,8 +188,7 @@ def measure_hr():
                         else:
                            # print(ts - pts)
                             pts = ts
-                            go_back = True
-                            break
+                            return
 
                     
                     if ppi > 300 and ppi < 1200:

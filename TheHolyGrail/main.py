@@ -132,7 +132,10 @@ def error_data():
             
 def measure_hr():
     global ppis, sample_list, count, max_sample, peakcounts, pts, ts
+    go_back = False
     while True:
+        if go_back == True:
+            break
         if samples.has_data():
             sample = samples.get()
             sample_list.append(sample)
@@ -168,6 +171,7 @@ def measure_hr():
                         else:
                            # print(ts - pts)
                             pts = ts
+                            go_back = True
                             break
 
                     

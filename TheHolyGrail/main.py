@@ -273,12 +273,12 @@ if highlighted_text == 1:
     json_message = measurement.json()
 """
 
-if highlighted_text == 3:
+if highlighted_text == 4:
     highlighted_text = 0
     error_data()
 
 
-"""if highlighted_text == 4:
+"""if highlighted_text == 3:
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     oled.fill(0)

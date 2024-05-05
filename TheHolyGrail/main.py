@@ -292,20 +292,20 @@ if highlighted_text == 3:
         if ".txt" in file:
             files_list.append(file)
     if len(files_list) == 0:
-        highlighted_text = 0
+        highlighted_file = 0
         print("ah")
         error_data()
     elif len(files_list) > 0 and len(files_list) <= 4:
         print("eh")
-        text_pos_magn = [0, 2, 4, 6]
+        text_pos_magn = [0, 2, 4, 6, 8, 10]
         oled.fill(0)
         for i in range(len(files_list)):
             oled.text(f"Measurement {i + 1}", 0, (text_height * text_pos_magn[i]) + 1, 1)
-        highlighted_text = 0
+        highlighted_file = 0
         oled.show()
         while True:
-            if highlighted_text != 0:
-                pos = text_pos_magn[highlighted_text - 1]
+            if highlighted_file != 0:
+                pos = text_pos_magn[highlighted_file - 1]
                 oled.rect(0, text_height * pos, oled_width, text_height + 2, 1)
             
             oled.show()
@@ -323,17 +323,33 @@ if highlighted_text == 3:
             while rot.fifo.has_data():
                 value = rot.fifo.get()
                 if value == 1:
-                    if highlighted_text + 1 < len(files_list) + 1:
-                        pos = text_pos_magn[highlighted_text - 1]
+                    if highlighted_file + 1 < len(files_list) + 1:
+                        pos = text_pos_magn[highlighted_file - 1]
                         oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
-                        highlighted_text += 1
+                        highlighted_file += 1
 
                 elif value == -1:
-                    if highlighted_text > 1:
-                        pos = text_pos_magn[highlighted_text - 1]
+                    if highlighted_file > 1:
+                        pos = text_pos_magn[highlighted_file - 1]
                         oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
                         highlighted_text -= 1
+                        
             
+            if press.has_data():
+                value = press.get()
+                if ts - pts < 250:
+                    #print(ts - pts)
+                    pts = ts
+                    continue
+                else:
+                    #print(ts - pts)
+                    pts = ts
+                    file1 = open(f"Readings_{highlighted_file - 1}txt", "r")
+                    oled.fill(0)
+                    data = file1.readlines()
+                    for i in len(data):
+                        oled.text(data[0], 0, (text_height * text_pos_magn[i]) + 1, 1)
+                    oled.show()
 
 if highlighted_text == 4:
     data_works()

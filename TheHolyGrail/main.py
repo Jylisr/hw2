@@ -149,6 +149,10 @@ def data_works():
 
             
 def measure_hr():
+    def get_signal(tid):
+        samples.put(sensor.read_u16())
+
+    timer = Piotimer(period = 4, mode = Piotimer.PERIODIC, callback = get_signal)
     global ppis, sample_list, count, max_sample, peakcounts, pts, ts
     go_back = False
     while True:
@@ -248,10 +252,7 @@ data = press.get()
 pts = ts
 start_menu()
 
-def get_signal(tid):
-    samples.put(sensor.read_u16())
 
-timer = Piotimer(period = 4, mode = Piotimer.PERIODIC, callback = get_signal)
 
 if highlighted_text == 1:
     highlighted_text = 0
@@ -288,19 +289,52 @@ if highlighted_text == 3:
     files_list = []
     for file in os.listdir():
         print("cuh")
-        if file.endswith(".txt"):
+        if ".txt" in file:
             files_list.append(file)
     if len(files_list) == 0:
         highlighted_text = 0
+        print("ah")
         error_data()
     elif len(files_list) > 0 and len(files_list) <= 4:
+        print("eh")
         text_pos_magn = [0, 2, 4, 6]
+        oled.fill(0)
         for i in range(len(files_list)):
             oled.text(f"Measurement {i + 1}", 0, (text_height * text_pos_magn[i]) + 1, 1)
+        highlighted_text = 0
+        oled.show()
+        while True:
+            if highlighted_text != 0:
+                pos = text_pos_magn[highlighted_text - 1]
+                oled.rect(0, text_height * pos, oled_width, text_height + 2, 1)
+            
+            oled.show()
+            if press.has_data():
+                value = press.get()
+                if ts - pts < 250:
+                    #print(ts - pts)
+                    pts = ts
+                    continue
+                else:
+                    #print(ts - pts)
+                    pts = ts
+                    break
+            
+            while rot.fifo.has_data():
+                value = rot.fifo.get()
+                if value == 1:
+                    if highlighted_text + 1 < len(files_list) + 1:
+                        pos = text_pos_magn[highlighted_text - 1]
+                        oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
+                        highlighted_text += 1
+
+                elif value == -1:
+                    if highlighted_text > 1:
+                        pos = text_pos_magn[highlighted_text - 1]
+                        oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
+                        highlighted_text -= 1
             
 
 if highlighted_text == 4:
     data_works()
 
-
-start_menu()

@@ -156,11 +156,19 @@ def measure_hr():
                     if i >= threshhold and i > max_sample:
                         max_sample = i
                     elif i < threshhold and max_sample != 0:
-                        peakcounts.append(sample_list.index(max_sample))
-                        print(sample_list.index(max_sample), max_sample)
-                        max_sample = 0
+                        try:
+                           # print(max_sample)
+                            index = sample_list.index(max_sample)
+                            peakcounts.append(index)
+                            max_sample = 0
+                        except ValueError:
+                            print(type(max_sample))
+                            print("Please put the sensor back on your pulse and wait for recalibration(10 seconds)")
+                            oled.fill(0)
+                            oled.text("Pulse not detected", 0, 30, 1)
+                            oled.show()
+                            continue
                         
-                print(len(peakcounts))
                 for i in range(len(peakcounts)):
                     delta = peakcounts[i] - peakcounts [i - 1]
                     ppi = delta * gap_ms
@@ -208,6 +216,8 @@ oled.text("Start", 44, 56, 1)
 oled.show()
 
 while not rot.fifo.has_data():
+    if press.has_data(): #if user accidentally presses button before scroll
+        data = press.get()
     pass
 
 data = rot.fifo.get()

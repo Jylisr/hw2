@@ -46,6 +46,7 @@ oled = SSD1306_I2C(oled_width, oled_height, i2c)
 sensor = ADC(Pin(26)) #ADC_0
 rot = Encoder(10,11)
 rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
+info = 0
 
 def button_handler(pin):
     global ts
@@ -118,6 +119,15 @@ def sending_data():
         oled.text("Sending", 24, 25, 1)
         oled.text("Data...", 47, 35, 1)
         oled.show()
+        
+def error_data():
+    while not info:
+        oled.fill(0)
+        oled.text("Error sending data", 2, 2, 1)
+        oled.text("Press the button", 2, 10, 1)
+        oled.text("to retry or wait 3", 2, 18, 1)
+        oled.text("seconds to return.", 2, 26, 1 )
+        
 
             
 def measure_hr():
@@ -241,7 +251,11 @@ start_menu()
     json_message = measurement.json()
 """
 
-"""if highlighted_text == 3:
+if highlighted_text == 3:
+    error_data()
+
+
+"""if highlighted_text == 4:
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     oled.fill(0)

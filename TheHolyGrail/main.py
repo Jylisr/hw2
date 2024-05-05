@@ -221,71 +221,7 @@ def measure_hr():
                 sample_list = []
                 peakcounts = []
 
-
-
-
-            
-            
-
-
-oled.fill(0)
-oled.text("Welcome to",24 ,25, 1)
-oled.text("PulsePal",32 ,35, 1)
-
-oled.text("Start", 44, 56, 1)
-oled.show()
-
-while not rot.fifo.has_data():
-    if press.has_data(): #if user accidentally presses button before scroll
-        data = press.get()
-    pass
-
-data = rot.fifo.get()
-oled.rect(44,56,character_width * 5,text_height, 1, 1)
-oled.text("Start", 44, 56, 0)
-oled.show()
-
-while not press.has_data():
-    pass
-
-data = press.get()
-pts = ts
-start_menu()
-
-
-
-if highlighted_text == 1:
-    highlighted_text = 0
-    measure_hr()
-
-
-                
-"""if highlighted_text == 2:
-    highlighted_text = 0
-    #hrv_analysis()
-
-    mean_ppi = sum(ppis)/len(ppis)
-    
-    mean_HR = 60000/mean_ppi
-    
-    for ppi in ppis:
-        ibi_diff += (ppi - mean_ppi)**2
-    ssdn = math.sqrt(ibi_diff/len(ppis - 1))
-    
-    for i in range(len(ppis) - 1):
-        ibi_diff += (ppis[i] - ppis[i + 1])**2
-    rmssd = math.sqrt(ibi_diff/len(ppis - 1))
-    
-    measurement = {
-    "mean_hr": mean_HR,
-    "mean_ppi": mean_ppi,
-    "rmssd": rmssd,
-    "sdnn": sdnn
-    }
-    json_message = measurement.json()
-"""
-
-if highlighted_text == 3:
+def history():
     files_list = []
     for file in os.listdir():
         if ".txt" in file:
@@ -336,10 +272,76 @@ if highlighted_text == 3:
                     oled.fill(0)
                     data = file1.readlines()
                     for i in range(len(data)):
-                        print(data[i])
                         oled.text(data[i], 0, (text_height * text_pos_magn[i]) + 1, 1)
                     oled.show()
 
-if highlighted_text == 4:
-    data_works()
+
+
+
+            
+            
+
+while True:
+    oled.fill(0)
+    oled.text("Welcome to",24 ,25, 1)
+    oled.text("PulsePal",32 ,35, 1)
+
+    oled.text("Start", 44, 56, 1)
+    oled.show()
+
+    while not rot.fifo.has_data():
+        if press.has_data(): #if user accidentally presses button before scroll
+            data = press.get()
+        pass
+
+    data = rot.fifo.get()
+    oled.rect(44,56,character_width * 5,text_height, 1, 1)
+    oled.text("Start", 44, 56, 0)
+    oled.show()
+
+    while not press.has_data():
+        pass
+
+    data = press.get()
+    pts = ts
+    start_menu()
+
+
+
+    if highlighted_text == 1:
+        highlighted_text = 0
+        measure_hr()
+
+
+                    
+    """if highlighted_text == 2:
+        highlighted_text = 0
+        #hrv_analysis()
+
+        mean_ppi = sum(ppis)/len(ppis)
+        
+        mean_HR = 60000/mean_ppi
+        
+        for ppi in ppis:
+            ibi_diff += (ppi - mean_ppi)**2
+        ssdn = math.sqrt(ibi_diff/len(ppis - 1))
+        
+        for i in range(len(ppis) - 1):
+            ibi_diff += (ppis[i] - ppis[i + 1])**2
+        rmssd = math.sqrt(ibi_diff/len(ppis - 1))
+        
+        measurement = {
+        "mean_hr": mean_HR,
+        "mean_ppi": mean_ppi,
+        "rmssd": rmssd,
+        "sdnn": sdnn
+        }
+        json_message = measurement.json()
+    """
+
+    if highlighted_text == 3:
+        history()
+    if highlighted_text == 4:
+        data_works()
+
 

@@ -288,15 +288,13 @@ if highlighted_text == 1:
 if highlighted_text == 3:
     files_list = []
     for file in os.listdir():
-        print("cuh")
         if ".txt" in file:
             files_list.append(file)
+        print(files_list)
     if len(files_list) == 0:
         highlighted_file = 0
-        print("ah")
         error_data()
     elif len(files_list) > 0 and len(files_list) <= 4:
-        print("eh")
         text_pos_magn = [0, 2, 4, 6, 8, 10]
         oled.fill(0)
         for i in range(len(files_list)):

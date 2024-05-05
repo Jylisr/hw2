@@ -295,7 +295,7 @@ if highlighted_text == 3:
         highlighted_file = 0
         error_data()
     elif len(files_list) > 0 and len(files_list) <= 4:
-        text_pos_magn = [0, 2, 4, 6, 8, 10]
+        text_pos_magn = [0, 2, 4, 6, 8, 10, 12, 14, 16]
         oled.fill(0)
         for i in range(len(files_list)):
             oled.text(f"Measurement {i + 1}", 0, (text_height * text_pos_magn[i]) + 1, 1)
@@ -307,16 +307,6 @@ if highlighted_text == 3:
                 oled.rect(0, text_height * pos, oled_width, text_height + 2, 1)
             
             oled.show()
-            if press.has_data():
-                value = press.get()
-                if ts - pts < 250:
-                    #print(ts - pts)
-                    pts = ts
-                    continue
-                else:
-                    #print(ts - pts)
-                    pts = ts
-                    break
             
             while rot.fifo.has_data():
                 value = rot.fifo.get()
@@ -342,11 +332,12 @@ if highlighted_text == 3:
                 else:
                     #print(ts - pts)
                     pts = ts
-                    file1 = open(f"Readings_{highlighted_file - 1}txt", "r")
+                    file1 = open(f"Readings_{highlighted_file}.txt", "r")
                     oled.fill(0)
                     data = file1.readlines()
-                    for i in len(data):
-                        oled.text(data[0], 0, (text_height * text_pos_magn[i]) + 1, 1)
+                    print(type(data))
+                    for i in range(len(data)):
+                        oled.text(data[i], 0, (text_height * text_pos_magn[i]) + 1, 1)
                     oled.show()
 
 if highlighted_text == 4:

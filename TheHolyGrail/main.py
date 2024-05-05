@@ -63,6 +63,7 @@ def start_menu():
     global max_sample
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
+    print("Entrou em start_menu")
     oled.fill(0)
     oled.text("MEASURE HR", 0, 0 + 1, 1)
     oled.text("BASIC HRV ANALYSIS", 0, (text_height * text_pos_magn[1]) + 1, 1)
@@ -122,13 +123,17 @@ def sending_data():
         
 def error_data():
     while not info:
-        print("into error_data")
         oled.fill(0)
-        oled.text("Error sending data", 2, 2, 1)
-        oled.text("Press the button", 2, 10, 1)
-        oled.text("to retry or wait 3", 2, 18, 1)
-        oled.text("seconds to return.", 2, 26, 1 )
+        oled.text(" Error sending", 6, 2, 1)
+        oled.text("data.", 45, 12, 1)
+        oled.text("Press button to", 5, 24, 1)
+        oled.text("retry or wait", 8, 34, 1)
+        oled.text("3s to return to", 2, 43, 1)
+        oled.text("menu.", 45, 51, 1)
         oled.show()
+        time.sleep(3)
+        start_menu()
+        break
         
 
             
@@ -228,12 +233,13 @@ def get_signal(tid):
 timer = Piotimer(period = 4, mode = Piotimer.PERIODIC, callback = get_signal)
 
 if highlighted_text == 1:
+    highlighted_text = 0
     measure_hr()
 
 
-start_menu()
                 
 """if highlighted_text == 2:
+    highlighted_text = 0
     #hrv_analysis()
 
     mean_ppi = sum(ppis)/len(ppis)
@@ -258,6 +264,7 @@ start_menu()
 """
 
 if highlighted_text == 3:
+    highlighted_text = 0
     error_data()
 
 
@@ -272,3 +279,5 @@ if highlighted_text == 3:
     oled.show()
     pass
 """
+
+start_menu()

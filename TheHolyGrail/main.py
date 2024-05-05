@@ -276,9 +276,10 @@ if highlighted_text == 1:
 
 if highlighted_text == 3:
     files_list = []
-    for file in os.listdir(dir):
+    for file in os.listdir():
+        print("cuh")
         if file.endswith(".txt"):
-            files_list.append(os.path.join(dir, file))
+            files_list.append(file)
     if len(files_list) == 0:
         highlighted_text = 0
         error_data()

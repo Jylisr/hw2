@@ -48,7 +48,7 @@ sensor = ADC(Pin(26)) #ADC_0
 rot = Encoder(10,11)
 rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
 info = 0
-dir = "C:\Users\Amaan\AmaansExercises\hw2\TheHolyGrail"
+dir = "C:/Users/Amaan/AmaansExercises/hw2/TheHolyGrail"
 def button_handler(pin):
     global ts
     ts = time.ticks_ms()
@@ -274,7 +274,6 @@ if highlighted_text == 1:
     json_message = measurement.json()
 """
 
-<<<<<<< HEAD
 if highlighted_text == 3:
     files_list = []
     for file in os.listdir(dir):
@@ -283,15 +282,14 @@ if highlighted_text == 3:
     if len(files_list) == 0:
         highlighted_text = 0
         error_data()
-    elif len(files_list)
-=======
-if highlighted_text == 4:
-    highlighted_text = 0
-    error_data()
->>>>>>> ecd3a90bd038b804d5fee1f74deab17dc8afa22e
+    elif len(files_list) > 0 and len(files_list) <= 4:
+        text_pos_magn = [0, 2, 4, 6]
+        for i in range(len(files_list)):
+            oled.text(f"Measurement {i + 1}", 0, (text_height * text_pos_magn[i]) + 1, 1)
+            
 
 
-"""if highlighted_text == 3:
+"""if highlighted_text == 4:
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     oled.fill(0)

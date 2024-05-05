@@ -7,6 +7,7 @@ from led import Led
 from piotimer import Piotimer
 import micropython
 import ujson
+import os
 #import extraction
 
 
@@ -47,7 +48,7 @@ sensor = ADC(Pin(26)) #ADC_0
 rot = Encoder(10,11)
 rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
 info = 0
-
+dir = "C:\Users\Amaan\AmaansExercises\hw2\TheHolyGrail"
 def button_handler(pin):
     global ts
     ts = time.ticks_ms()
@@ -274,8 +275,14 @@ if highlighted_text == 1:
 """
 
 if highlighted_text == 3:
-    highlighted_text = 0
-    error_data()
+    files_list = []
+    for file in os.listdir(dir):
+        if file.endswith(".txt"):
+            files_list.append(os.path.join(dir, file))
+    if len(files_list) == 0:
+        highlighted_text = 0
+        error_data()
+    elif len(files_list)
 
 
 """if highlighted_text == 4:

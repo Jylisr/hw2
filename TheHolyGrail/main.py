@@ -122,11 +122,13 @@ def sending_data():
         
 def error_data():
     while not info:
+        print("into error_data")
         oled.fill(0)
         oled.text("Error sending data", 2, 2, 1)
         oled.text("Press the button", 2, 10, 1)
         oled.text("to retry or wait 3", 2, 18, 1)
         oled.text("seconds to return.", 2, 26, 1 )
+        oled.show()
         
 
             

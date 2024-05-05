@@ -140,17 +140,15 @@ def measure_hr():
                 for i in sample_list:
                     if i >= threshhold and i > max_sample:
                         max_sample = i
-                    if i < threshhold and max_sample != 0:
+                    elif i < threshhold and max_sample != 0:
                         peakcounts.append(sample_list.index(max_sample))
+                        print(sample_list.index(max_sample), max_sample)
                         max_sample = 0
                         
                 print(len(peakcounts))
-                for i in range(1, len(peakcounts)):
+                for i in range(len(peakcounts)):
                     delta = peakcounts[i] - peakcounts [i - 1]
-                    if delta < 0:
-                        continue
                     ppi = delta * gap_ms
-                    print(ppi)
                     if press.has_data():
                         value = press.get()
                         if ts - pts < 250:

@@ -335,8 +335,8 @@ if highlighted_text == 3:
                     file1 = open(f"Readings_{highlighted_file}.txt", "r")
                     oled.fill(0)
                     data = file1.readlines()
-                    print(type(data))
                     for i in range(len(data)):
+                        print(data[i])
                         oled.text(data[i], 0, (text_height * text_pos_magn[i]) + 1, 1)
                     oled.show()
 

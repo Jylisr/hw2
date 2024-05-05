@@ -274,6 +274,7 @@ if highlighted_text == 1:
     json_message = measurement.json()
 """
 
+<<<<<<< HEAD
 if highlighted_text == 3:
     files_list = []
     for file in os.listdir(dir):
@@ -283,9 +284,14 @@ if highlighted_text == 3:
         highlighted_text = 0
         error_data()
     elif len(files_list)
+=======
+if highlighted_text == 4:
+    highlighted_text = 0
+    error_data()
+>>>>>>> ecd3a90bd038b804d5fee1f74deab17dc8afa22e
 
 
-"""if highlighted_text == 4:
+"""if highlighted_text == 3:
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     oled.fill(0)

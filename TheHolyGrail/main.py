@@ -63,7 +63,7 @@ def start_menu():
     global max_sample
     text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
-    print("Entrou em start_menu")
+    print("Into start_menu")
     oled.fill(0)
     oled.text("MEASURE HR", 0, 0 + 1, 1)
     oled.text("BASIC HRV ANALYSIS", 0, (text_height * text_pos_magn[1]) + 1, 1)
@@ -290,7 +290,7 @@ if highlighted_text == 3:
     for file in os.listdir():
         if ".txt" in file:
             files_list.append(file)
-        print(files_list)
+    print(files_list)
     if len(files_list) == 0:
         highlighted_file = 0
         error_data()

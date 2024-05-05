@@ -48,7 +48,6 @@ sensor = ADC(Pin(26)) #ADC_0
 rot = Encoder(10,11)
 rot_butt = Pin(12, Pin.IN, pull = Pin.PULL_UP)
 info = 0
-dir = "C:/Users/Amaan/AmaansExercises/hw2/TheHolyGrail"
 def button_handler(pin):
     global ts
     ts = time.ticks_ms()
@@ -135,6 +134,17 @@ def error_data():
         time.sleep(3)
         start_menu()
         break
+    
+def data_works():
+    while not info:
+        oled.fill(0)
+        oled.text("Mean HR:", 2, 2, 1)
+        oled.text("Mean PPI:", 2, 12, 1)
+        oled.text("RMSSD:", 2, 22, 1)
+        oled.text("SDNN:", 2, 32, 1)
+        oled.text("SNS:", 2, 42, 1)
+        oled.text("PNS:", 2, 52, 1)
+        oled.show()
         
 
             
@@ -289,17 +299,8 @@ if highlighted_text == 3:
             oled.text(f"Measurement {i + 1}", 0, (text_height * text_pos_magn[i]) + 1, 1)
             
 
+if highlighted_text == 4:
+    data_works()
 
-"""if highlighted_text == 4:
-    text_pos_magn = [0, 2, 4, 6]
-    highlighted_text = 0
-    oled.fill(0)
-    oled.text("MEASUREMENT 1", 0, 0 + 1, 1)
-    oled.text("MEASUREMENT 2", 0, (text_height * text_pos_magn[1]) + 1, 1)
-    oled.text("MEASUREMENT 3", 0, (text_height * text_pos_magn[2]) + 1, 1)
-    oled.text("MEASUREMENT 4", 0, (text_height * text_pos_magn[3]) + 1, 1)
-    oled.show()
-    pass
-"""
 
 start_menu()

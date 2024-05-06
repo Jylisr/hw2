@@ -1,4 +1,5 @@
 import time
+import math
 from ssd1306 import SSD1306_I2C
 from machine import UART, Pin, I2C, ADC
 from filefifo import Filefifo
@@ -6,14 +7,16 @@ from fifo import Fifo
 from led import Led
 from piotimer import Piotimer
 import micropython
-from kubios import Kubios
+#from kubios import Kubios
+#from mqtt_publish import Mqtt
+#import extraction
 import ujson
 import os
-#import extraction
 
 
 
-class Encoder:
+
+class Encoder: #move this to another file
     def __init__(self, rot_a = 10, rot_b = 11):
         self.a = Pin(rot_a, mode = Pin.IN, pull = Pin.PULL_UP)
         self.b = Pin(rot_b, mode = Pin.IN, pull = Pin.PULL_UP)
@@ -29,17 +32,21 @@ class Encoder:
 
 micropython.alloc_emergency_exception_buf(200)
 samples = Fifo(2000)
-press = Fifo(20)
+press = Fifo(10)
 sample_list = []
+heartrates = [] 
 peakcounts = []
+history_list = []
+text_pos_magn = [0, 2, 4, 6, 8, 10]
 max_sample = 0
 minhr = 30
 maxhr = 240
 pts = 0
 ppis = []
 gap_ms = 4
-count = 0
 i2c = I2C(1, scl=Pin(15), sda=Pin(14), freq=400000)
+#kubios = Kubios()
+#mqtt = Mqtt()
 oled_width = 128
 oled_height = 64
 character_width = 8
@@ -57,10 +64,8 @@ def button_handler(pin):
 rot_butt.irq(handler = button_handler, trigger = Pin.IRQ_FALLING, hard = True)
 
 
-
 def start_menu():
     global pts, highlighted_text, max_sample
-    text_pos_magn = [0, 2, 4, 6]
     highlighted_text = 0
     print("Into start_menu")
     oled.fill(0)
@@ -107,21 +112,18 @@ def start_menu():
             
             
 def collecting_data():
-    while not info:
         oled.fill(0)
         oled.text("Collecting", 24, 25, 1)
         oled.text("Data...", 47, 35, 1)
         oled.show()
         
 def sending_data():
-    while not info:
         oled.fill(0)
         oled.text("Sending", 24, 25, 1)
         oled.text("Data...", 47, 35, 1)
         oled.show()
         
 def error_data():
-    while not info:
         oled.fill(0)
         oled.text(" Error sending", 6, 2, 1)
         oled.text("data.", 45, 12, 1)
@@ -131,32 +133,76 @@ def error_data():
         oled.text("menu.", 45, 51, 1)
         oled.show()
         time.sleep(3)
-        start_menu()
-        break
-        
+def hrv_analysis(ppis):
+    global ts, pts
+    ibi_diff = 0
+    if len(ppis) == 0:
+        oled.fill(0)
+        oled.text("Measure HR first", 0, 30, 1)
+        oled.show()
+        time.sleep(3)
+        return
+    mean_ppi = sum(ppis)/len(ppis)
+    
+    mean_HR = 60000/mean_ppi
+    
+    for ppi in ppis:
+        ibi_diff += (ppi - mean_ppi)**2
+    ssdn = math.sqrt(ibi_diff/len(ppis) - 1)
+    
+    for i in range(len(ppis) - 1):
+        ibi_diff += (ppis[i] - ppis[i + 1])**2
+    rmssd = math.sqrt(ibi_diff/len(ppis) - 1)
+    
+    measurement = {
+    "mean_hr": round(mean_HR),
+    "mean_ppi": round(mean_ppi),
+    "rmssd": round(rmssd),
+    "sdnn": round(ssdn)
+    }
+    if len(history_list) >= 5:
+        history_list.remove(history_list[0])
+    history_list.append(measurement)
+    oled.fill(0)
+    count = 0
+    for term, measure in measurement.items():
+        print(i)
+        oled.text(f"{term}: {measure}", 0, (text_height * text_pos_magn[count]) + 1, 1)
+        count += 1
+    oled.show()
+    while True:
+        if press.has_data():
+            if ts - pts < 250:
+                #print(ts - pts)
+                pts = ts
+                continue
+            else:
+                #print(ts - pts)
+                pts = ts
+                break
+    json_message = measurement #.json()
+    
+    return json_message
 
             
 def measure_hr():
+    collecting_data()
     def get_signal(tid):
         samples.put(sensor.read_u16())
 
     timer = Piotimer(period = 4, mode = Piotimer.PERIODIC, callback = get_signal)
     
-    global ppis, sample_list, count, max_sample, peakcounts, pts, ts
+    global ppis, heartrates, sample_list, max_sample, peakcounts, pts, ts
     while True:
         if samples.has_data():
             sample = samples.get()
             sample_list.append(sample)
-            count += 1
-            if sample < 0:
-                break
-            if count >= 750:
+            
+            if len(sample_list) >= 750:
                 max_value = max(sample_list)
                 min_value = min(sample_list)
                 threshhold = (4*max_value + min_value)/5
                 #print(max_value, threshhold)
-                count = 0
-                
                 #gathering peak counts
                 for i in sample_list:
                     if i >= threshhold and i > max_sample:
@@ -168,13 +214,24 @@ def measure_hr():
                             peakcounts.append(index)
                             max_sample = 0
                         except ValueError:
-                            print(type(max_sample))
                             print("Please put the sensor back on your pulse and wait for recalibration(10 seconds)")
                             oled.fill(0)
                             oled.text("Pulse not detected", 0, 30, 1)
                             oled.show()
-                            continue
-                        
+                            if press.has_data():
+                                value = press.get()
+                                if ts - pts < 250:
+                                    #print(ts - pts)
+                                    pts = ts
+                                    continue
+                                else:
+                                   # print(ts - pts)
+                                    pts = ts
+                                    peakcounts = []
+                                    sample_list = []
+                                    timer.deinit()
+                                    return
+                       
                 for i in range(len(peakcounts)):
                     delta = peakcounts[i] - peakcounts [i - 1]
                     ppi = delta * gap_ms
@@ -187,78 +244,82 @@ def measure_hr():
                         else:
                            # print(ts - pts)
                             pts = ts
+                            timer.deinit()
                             return
 
                     
                     if ppi > 300 and ppi < 1200:
                         heartrate = 60000/ppi
                         heartrate = round(heartrate)
+                        print(f"HR : {heartrate} BPM")
+                        if len(heartrates) < 3:
+                            heartrates.append(heartrate)
+                            print(len(heartrates))
+                            continue
+                        if len(heartrates) > 1:
+                            if heartrates[-1] - heartrates[-2] > 20 or heartrates[-2] - heartrates[-1] > 20:
+                                oled.text("Noise detected", 0, 1)
+                                oled.show()
+                                
+                        if len(heartrates) >= 3:
+                            heartrate = sum(heartrates)//len(heartrates)
+                            heartrates = []
+                            
                         if heartrate > minhr and heartrate < maxhr:
                             oled.fill(0)
                             oled.rect(oled_width - (character_width * 4), oled_height - (text_height + 1), character_width * 4, text_height, 1, 1)
                             oled.text("STOP", oled_width - (character_width * 4), oled_height - text_height, 0)
-                            oled.text(f"HR : {heartrate} BPM", 0, 30, 1)
+                            #oled.rect(0, oled_height - text_height, character_width * 10, text_height, 0, 1)
+                            oled.text(f"HR: {heartrate} BPM", 0, oled_height - text_height, 1)
                             oled.show()
-                            #print(f"HR : {heartrate} BPM")
                             ppis.append(ppi)
+                            prev_hr = heartrate
 
                 
                 sample_list = []
                 peakcounts = []
 
 def history():
-    files_list = []
-    for file in os.listdir():
-        if ".txt" in file:
-            files_list.append(file)
-    print(files_list)
-    if len(files_list) == 0:
-        highlighted_file = 0
-        error_data()
-    elif len(files_list) > 0 and len(files_list) <= 4:
-        text_pos_magn = [0, 2, 4, 6, 8, 10, 12, 14, 16]
-        oled.fill(0)
-        for i in range(len(files_list)):
-            oled.text(f"Measurement {i + 1}", 0, (text_height * text_pos_magn[i]) + 1, 1)
-        highlighted_file = 0
+    oled.fill(0)
+    for i in range(len(files_list)):
+        oled.text(f"Measurement {i + 1}", 0, (text_height * text_pos_magn[i]) + 1, 1)
+    highlighted_file = 0
+    oled.show()
+    while True:
+        if highlighted_file != 0:
+            pos = text_pos_magn[highlighted_file - 1]
+            oled.rect(0, text_height * pos, oled_width, text_height + 2, 1)
+        
         oled.show()
-        while True:
-            if highlighted_file != 0:
-                pos = text_pos_magn[highlighted_file - 1]
-                oled.rect(0, text_height * pos, oled_width, text_height + 2, 1)
-            
-            oled.show()
-            
-            while rot.fifo.has_data():
-                value = rot.fifo.get()
-                if value == 1:
-                    if highlighted_file + 1 < len(files_list) + 1:
-                        pos = text_pos_magn[highlighted_file - 1]
-                        oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
-                        highlighted_file += 1
+        
+        while rot.fifo.has_data():
+            value = rot.fifo.get()
+            if value == 1:
+                if highlighted_file + 1 < len(history_list) + 1:
+                    pos = text_pos_magn[highlighted_file - 1]
+                    oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
+                    highlighted_file += 1
 
-                elif value == -1:
-                    if highlighted_file > 1:
-                        pos = text_pos_magn[highlighted_file - 1]
-                        oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
-                        highlighted_text -= 1
-                        
-            
-            if press.has_data():
-                value = press.get()
-                if ts - pts < 250:
-                    #print(ts - pts)
-                    pts = ts
-                    continue
-                else:
-                    #print(ts - pts)
-                    pts = ts
-                    file1 = open(f"Readings_{highlighted_file}.txt", "r")
-                    oled.fill(0)
-                    data = file1.readlines()
-                    for i in range(len(data)):
-                        oled.text(data[i], 0, (text_height * text_pos_magn[i]) + 1, 1)
-                    oled.show()
+            elif value == -1:
+                if highlighted_file > 1:
+                    pos = text_pos_magn[highlighted_file - 1]
+                    oled.rect(0, text_height * pos, oled_width, text_height + 2, 0)
+                    highlighted_text -= 1
+                    
+        
+        if press.has_data():
+            value = press.get()
+            if ts - pts < 250:
+                #print(ts - pts)
+                pts = ts
+                continue
+            else:
+                #print(ts - pts)
+                pts = ts
+                
+                for i in range(len(history_list[highlighted_file])):
+                    oled.text(data[i], 0, (text_height * text_pos_magn[i]) + 1, 1)
+                oled.show()
 
 
 
@@ -266,28 +327,31 @@ def history():
             
 
 while True:
-    oled.fill(0)
-    oled.text("Welcome to",24 ,25, 1)
-    oled.text("PulsePal",32 ,35, 1)
+    if len(ppis) < 20:
+        oled.fill(0)
+        oled.text("Welcome to",24 ,25, 1)
+        oled.text("PulsePal",32 ,35, 1)
 
-    oled.text("Start", 44, 56, 1)
-    oled.show()
+        oled.text("Start", 44, 56, 1)
+        oled.show()
 
-    while not rot.fifo.has_data():
-        if press.has_data(): #if user accidentally presses button before scroll
-            data = press.get()
-        pass
+        while not rot.fifo.has_data():
+            if press.has_data(): #if user accidentally presses button before scroll
+                data = press.get()
+            pass
 
-    data = rot.fifo.get()
-    oled.rect(44,56,character_width * 5,text_height, 1, 1)
-    oled.text("Start", 44, 56, 0)
-    oled.show()
+        data = rot.fifo.get()
+        oled.rect(44,56,character_width * 5,text_height, 1, 1)
+        oled.text("Start", 44, 56, 0)
+        oled.show()
 
-    while not press.has_data():
-        pass
 
-    data = press.get()
-    pts = ts
+        while not press.has_data():
+            pass
+
+        data = press.get()
+        pts = ts
+    
     start_menu()
 
 
@@ -298,34 +362,39 @@ while True:
 
 
                     
-    """if highlighted_text == 2:
+    if highlighted_text == 2:
         highlighted_text = 0
-        #hrv_analysis()
+        #json_message =
+        hrv_analysis(ppis)
+        """json_message = json_message.json()
+        #Connect to WLAN
+        mqtt.connect_wlan()
+        
+        # Connect to MQTT
+        try:
+            mqtt_client=mqtt.connect_mqtt()
+            
+        except Exception as e:
+            print(f"Failed to connect to MQTT: {e}")
 
-        mean_ppi = sum(ppis)/len(ppis)
-        
-        mean_HR = 60000/mean_ppi
-        
-        for ppi in ppis:
-            ibi_diff += (ppi - mean_ppi)**2
-        ssdn = math.sqrt(ibi_diff/len(ppis - 1))
-        
-        for i in range(len(ppis) - 1):
-            ibi_diff += (ppis[i] - ppis[i + 1])**2
-        rmssd = math.sqrt(ibi_diff/len(ppis - 1))
-        
-        measurement = {
-        "mean_hr": mean_HR,
-        "mean_ppi": mean_ppi,
-        "rmssd": rmssd,
-        "sdnn": sdnn
-        }
-        json_message = measurement.json()
-    """
+        # Send MQTT message
+        try:
+            topic = "pulsepal/hrv"
+            message = json_message
+            mqtt_client.publish(topic, message)
+            print(f"Sending to MQTT: {topic} -> {message}")
+                
+        except Exception as e:
+            print(f"Failed to send MQTT message: {e}")"""
+
 
     if highlighted_text == 3:
+        highlighted_text = 0
         history()
     if highlighted_text == 4:
-        Kubios(ppis)
+        highlighted_text = 0
+        json = hrv_analysis(ppis)
+        print(json)
+        #kubios.connect(ppis)
 
 
